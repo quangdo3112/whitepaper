@@ -321,9 +321,9 @@ Vite账本是给定的交易集合$T$，以及偏序关系$<$，所构成的严�
 
 一个严格偏序集，可以对应到一个DAG结构。上面所定义的Vite账本，结构类似于block-lattice。交易分为请求交易和响应交易两种，每个交易对应一个单独的区块，每个账户$A_{i}$对应一条链，一个交易对中，响应交易引用其对应的请求交易的hash。
 
-\section{共识算法}
+\section{共识}
 \subsection{交易确认}
-当账本发生分叉时，共识结果可能会在两个分叉账本间摇摆。例如，基于区块链结构的系统，如果节点接收到一个总难度更高的分叉，就会选择这个新分叉作为共识结果，而原分叉将被废弃，原分叉上的交易也会被回滚。在此类系统中，交易被回滚是一个非常严重的事件，将会导致双花(double spend)。试想，一个商家接收到一笔付款，提供了商品或服务，之后这笔付款又被撤回，商家可能会因此面临损失。因此，用户在收到一笔付款交易时，需要等待系统对这笔交易进行“确认”，以确保这笔交易被回滚的概率足够低。
+当账本发生分叉时，共识结果可能会在两个分叉账本间摇摆。例如，基于区块链结构的系统，如果节点接收到一个更长的分叉链，就会选择这个新分叉作为共识结果，而原分叉将被废弃，原分叉上的交易也会被回滚。在此类系统中，交易被回滚是一个非常严重的事件，将会导致双花(double spend)。试想，一个商家接收到一笔付款，提供了商品或服务，之后这笔付款又被撤回，商家可能会因此面临损失。因此，用户在收到一笔付款交易时，需要等待系统对这笔交易进行“确认”，以确保这笔交易被回滚的概率足够低。
 
 \begin{definition}[交易确认]
 当一个交易被回滚的概率小于一个给定的阈值$\epsilon$时，称该交易为已确认(confirmed)。
@@ -347,15 +347,143 @@ Nano采用了一个基于投票的共识算法\cite{nano}，由一组用户选�
 从本质上，投票的机制是一个偏中心化的解决方案。我们可以把投票结果看作是对账本状态的一个快照，这个快照会分布式的保存在网络中各个节点的本地存储中。为了拥有和区块链同样的防篡改能力，我们可以将这些快照也组织成链式结构，这就是Vite设计的核心之一——快照链\cite{snapshotchain}。
 
 \subsection{快照链}
-下面我们给出快照链的定义：
-\begin{definition}[快照链]
-快照链是由快照块组成的链式结构，后一个快照块引用前一个快照块的hash。
+快照链是Vite中最重要的存储结构，它的主要作用是维护Vite账本的共识。首先我们给出快照链的定义：
+\begin{definition}[快照块和快照链]
+一个快照块存储一个Vite账本的状态快照，状态包括：账户的余额、合约状态的Merkle root，每个账户链中最后一个块的hash。快照链是由快照块组成的链式结构，后一个快照块引用前一个快照块的hash。
 \end{definition}
+
+一个用户账户的状态包含余额和账户链最后一个块的hash；一个合约账户的状态，除了包含以上两个字段之外，还包含该账户合约状态的Merkle root hash。账户的状态的结构如下：
+
+\begin{verbatim}
+  struct AccountState {
+    // 账户余额
+    uint256 balance;
+    // 合约状态的Merkle root
+    optional uint256 storageRoot;
+    // 账户链最后一个交易的hash
+    uint256 lastTransaction;
+  }
+\end{verbatim}
+
+快照块的结构定义如下：
+\begin{verbatim}
+  struct SnapshotBlock {
+    // 前一个块的hash    
+    uint256 prevHash;
+    // 快照信息
+    map<address, AccountState> snapshot;
+    // 签名
+    uint256 signature;
+  }
+\end{verbatim}
+
+快照链中第一个快照块称为“创世快照”，保存的是账本中创世块的快照。
 
 \includegraphics[width=.8\linewidth]{image/snapshotchain.png}
 
-\subsection{增量存储}
-由于快照链的每一个快照块都需要保存所有账户的状态
+由于快照链中每个快照块都对应于Vite账本的唯一分叉，因此，在快照块不发生分叉的情况下，通过快照块，可以确定Vite账本的共识结果。
+
+\subsection{快照链与交易确认}
+
+引入了快照链之后，block-lattice结构天然的安全性缺陷就得到了弥补。攻击者想生成一个双花交易，除了要重建Vite账本中的hash引用之外，还需要重建快照链中，首次快照该交易的快照块之后的所有区块，并且需要产生一条更长的快照链。这样，攻击成本将大大提高。
+
+在Vite中，交易的确认机制类似于比特币，定义如下：
+
+\begin{definition}[Vite交易确认]
+在Vite中，一个交易被快照链所快照，则成为该交易被确认。第一次快照该交易的快照块的深度，称为交易的确认数。
+\end{definition}
+
+在这个定义下，快照链每增长一个区块，此前所有已确认交易的确认数都增加1，双花攻击成功的概率随着快照链的不断增加而逐渐下降。这样，用户就可以根据具体的场景，通过等待不同的确认数，来定制所需的确认置信度。
+
+快照链本身依赖一个共识算法，如果快照链发生分叉，则选取\textbf{最长的}分叉作为合法分叉。当快照链切换到新的分叉时，原有快照信息会被回滚，相当于原来对账本达成的共识被推翻，由新的共识结果取代。因此，快照链是整个系统安全性的基石，需要非常认真的对待。
+
+\subsection{压缩存储}
+由于快照链中每一个快照块都需要保存所有账户的状态，耗费的存储空间非常大，因此需要对快照链进行压缩。
+
+\begin{center}
+\begin{figurehere}
+\includegraphics[width=.7\linewidth]{image/compact-snapshot.png}
+\caption{压缩前的快照}
+\end{figurehere}
+\end{center}
+
+压缩快照链存储空间的基本思路是利用增量存储：一个快照块只保存相比于前一个快照块发生变化的数据。如果一个账户在两个快照之间没有发生任何交易，则后一个快照块不保存该账户的数据。
+
+要恢复快照信息，可以从前向后依次遍历快照块，将每一个快照块中的数据覆盖到当前的数据上即可。
+
+\begin{center}
+\begin{figurehere}
+\centering
+\tikzstyle{block} = [draw, fill=blue!20, rectangle, 
+    minimum height=3em, minimum width=6em]
+\tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=1cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-,thin,black}]
+
+\begin{tikzpicture}[
+    auto, 
+    node distance=2cm,
+    >=latex',
+    font=\bfseries\footnotesize\sffamily,
+    snapshot/.style={
+		scale=0.7,
+		rectangle,
+		rounded corners,
+		draw=black, 
+		text centered,
+%		text width=5cm,
+		minimum height=12mm,
+		fill=white
+	},
+	label/.style={
+		scale=0.7
+	}
+  ]
+    % We start by placing the blocks
+
+  \node [snapshot] (snapshot2) 
+ {%
+ \begin{tabular}{l}
+  \textbf{Snapshot\#2}\\
+  $A_{1}: {s_{1}}'$\\
+  \\
+  \\
+ \end{tabular}
+ };
+ 
+  \node [snapshot, xshift=-3.5cm] (snapshot1) 
+ {%
+ \begin{tabular}{l}
+  \textbf{Snapshot\#1}\\
+  $A_{1}: s_{1}$\\
+  $A_{2}: s_{2}$\\
+  $A_{3}: s_{3}$
+ \end{tabular}
+ };
+ 
+ 
+  \node [snapshot, xshift=3.5cm] (snapshot3) 
+ {%
+ \begin{tabular}{l}
+  \textbf{Snapshot\#3}\\
+  \\
+  $A_{2}: {s_{2}}''$\\
+  \\
+ \end{tabular}
+ };
+ 
+ \draw [draw,->] (snapshot2) -- (snapshot1);
+ \draw [draw,->] (snapshot3) -- (snapshot2);
+
+\end{tikzpicture}
+
+\caption{压缩后的快照}
+\label{fig:compact-snapshot}
+\end{figurehere}
+\end{center}
+
+由于每个快照只保存在快照时刻每个账户最后的状态，不关心中间状态，无论在两个快照块之间，一个账户产生了多少交易，在快照中也只保存一份数据。因此，一个快照块最多占用$S * A$个字节。其中，$S = \text{sizeof}(s_{i})$，为每个账户状态占用的字节数，$A$是系统总账户数。
 
 \subsection{出块权}
 
