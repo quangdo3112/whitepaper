@@ -1,6 +1,6 @@
 % !TEX program = XeLaTeX
 % !TEX encoding = UTF-8
-\documentclass[UTF8,nofonts]{ctexart}
+\documentclass[UTF8]{ctexart}
 \setCJKmainfont[BoldFont=FandolSong-Bold.otf,ItalicFont=FandolKai-Regular.otf]{FandolSong-Regular.otf}
 \setCJKsansfont[BoldFont=FandolHei-Bold.otf]{FandolHei-Regular.otf}
 \setCJKmonofont{FandolFang-Regular.otf}
@@ -64,11 +64,11 @@
   刘春明\\
   \texttt{charles@vite.org}\\
   \and
-  	王东\\
-  	\texttt{daniel@loopring.org}\\
-  	\and
-  	伍鸣\\
-  	\texttt{woo@vite.org}\\
+    王东\\
+    \texttt{daniel@loopring.org}\\
+    \and
+    伍鸣\\
+    \texttt{woo@vite.org}\\
  }
 
 \makeatletter
@@ -98,9 +98,9 @@
 \section{简介}
 \subsection{定义}
 
-一个通用去中心化应用平台，可以支持一组智能合约，每个智能合约都是一个拥有独立状态以及不同操作逻辑的交易状态机，它们之间可以通过消息传递的方式进行通信。
+所谓通用的去中心化应用平台，指的是可以支持智能合约计算和存储的平台。其中每个智能合约都是个拥有独立状态及不同操作逻辑的交易状态机，它们之间可以通过消息传递的方式进行通信和调用。
 
-从整体上，这个系统是一个交易状态机。系统的状态$\boldsymbol{s}\in\boldsymbol{S}$也称为世界状态，是由每一个独立账户的状态构成的。一个能够引起世界状态改变的事件称为交易。更形式化的定义如下：
+通用的去中心化应用平台从整体上也可以被看做是一个交易状态机。系统的状态$\boldsymbol{s}\in\boldsymbol{S}$也称为世界状态，是由每一个独立账户的状态构成的。一个能够引起世界状态改变的事件称为交易。更形式化的定义如下：
 
 \begin{definition}[交易状态机] \label{def-fsm}
 一个交易状态机是一个四元组: $(\boldsymbol{T},\boldsymbol{S},\boldsymbol{g},\boldsymbol{{\delta}})$，其中，$\boldsymbol{T}$是交易的集合，$\boldsymbol{S}$是状态的集合，$\boldsymbol{g} \in \boldsymbol{S}$为初始状态，也称为“创世块”，$\boldsymbol{{\delta}:\boldsymbol{S}\times\boldsymbol{T}\rightarrow\boldsymbol{S}}$是状态转移函数。
@@ -111,7 +111,7 @@
 一个交易状态机$(\boldsymbol{T},\boldsymbol{S},\boldsymbol{s_{0}},\boldsymbol{{\delta}})$的语义是一个离散迁移系统: $(\boldsymbol{S},\boldsymbol{s_{0}},\boldsymbol{\rightarrow})$。$\boldsymbol{\rightarrow} \in \boldsymbol{S}\times\boldsymbol{S}$是迁移关系，
 \end{definition}
 
-同时，去中心化应用平台是一个分布式系统，具有最终一致性。通过某种共识算法，节点间可以就最终的状态达成一致。在现实场景中，智能合约的状态中保存的是一个去中心化应用的全部数据，体积比较大，无法在节点间传输。因此，节点间需要通过传递一组交易，来达成最终状态的一致。我们将这样的一组交易组织成某种特定的数据结构，通常称之为账本。
+同时，去中心化应用平台是一个分布式系统，具有最终一致性。通过某种共识算法，节点间可以就最终的状态达成一致。在现实场景中，智能合约的状态中保存的是一个去中心化应用的部分甚至全部数据。多数的状态数据体积比较大，无法在节点间全量传输同步。因此节点间需要通过传递一组交易，来达成最终状态的一致。我们将这样的一组交易组织成某种特定的数据结构，通常称之为账本。
 
 \begin{definition}[账本] \label{def-ledger}
 账本是由一组交易构成的，具有递归构造的抽象数据类型，定义如下：
@@ -134,7 +134,7 @@ $S_{t} \in 2^{T}$，$l_{1}=\Gamma_{1}(S_{t})$, $l_{2}=\Gamma_{2}(S_{t})$，若$l
 根据交易状态机的语义，我们可以很容易的证明，从一个初始状态开始，如果账本不分叉，则每个节点最终会进入相同的状态。那么，如果接收到分叉的账本，就一定进入不同的状态吗？这取决于账本中交易的内在逻辑，以及账本如何组织交易之间的偏序。现实中，经常会出现一些满足交换律的交易，却因为账本设计的问题，频繁的引起分叉。当系统从一个初始状态出发，接收两个分叉的账本，最终进入同一状态，我们称这两个账本为伪分叉账本。
 
 \begin{definition}[伪分叉] \label{def-falsefork}
-有初始状态$s_{0} \in S$，账本$l_{1},l_{2} \in L$，$s_{0}\overset{l_{1}}{\rightarrow}s_{1}, s_{0}\overset{l_{2}}{\rightarrow}s_{2}$。若$l_{1} \neq l_{2}$，且$s_{1}=s_{2}$，则称这两个账本$l_{1} ,l_{2}$为伪分叉(false fork)账本。
+有初始状态$s_{0} \in S$，账本$l_{1},l_{2} \in L$，$s_{0}\overset{l_{1}}{\rightarrow}s_{1}, s_{0}\overset{l_{2}}{\rightarrow}s_{2}$。若$l_{1} \neq l_{2}$，且$s_{1}=s_{2}$，则称这两个账本$l_{1} ,l_{2}$为伪分叉(False Fork)账本。
 \end{definition}
 
 一个设计良好的账本，应该尽量降低伪分叉发生的概率。
@@ -146,14 +146,14 @@ $S_{t} \in 2^{T}$，$l_{1}=\Gamma_{1}(S_{t})$, $l_{2}=\Gamma_{2}(S_{t})$，若$l
 $$\Phi: 2^{L} \rightarrow L$$
 \end{definition}
 
-共识算法是系统设计的一个重要内容，一个好的共识算法应该具有较高的相交速度(high convergence speed)，减少共识在不同分叉间摇摆，并对恶意攻击具有较高的防范能力。
+共识算法是系统设计的一个重要内容，一个好的共识算法应该具有较高的相交速度(High Convergence Speed)，减少共识在不同分叉间摇摆，并对恶意攻击具有较高的防范能力。
 
-\subsection{当前进展}
+\subsection{去中心化应用平台当前的进展}
 \subsection{以太坊}
 以太坊\cite{buterin2017ethereum}率先实现了这样一个系统。
 在以太坊的设计中，世界状态的定义是：$S = \Sigma^{A}$，是由每个账户$a \in A$与该账户的状态$\sigma_{a} \in \Sigma$构成的映射。因此，以太坊的状态机中任何一个状态都是全局的，这表示一个节点在每个时刻都可以获取任何一个账户的状态。
 
-以太坊的状态转移函数$\delta$，是由一组程序代码来定义的，每组代码被称为一个智能合约。以太坊定义了一个图灵完备的虚拟机，称为EVM，运行在其上的指令集称为EVM代码。用户可以通过一种语法类似于javascript的程序语言Solidity来开发智能合约，并编译成EVM代码，部署到以太坊上\cite{dannen2017introducing}。一旦智能合约部署成功，就相当于定义了该合约账户$a$收到一个交易后的状态转移函数$\delta_{a}$。
+以太坊的状态转移函数$\delta$，是由一组程序代码来定义的，每组代码被称为一个智能合约。以太坊定义了一个图灵完备的虚拟机，称为EVM，运行在其上的指令集称为EVM代码。用户可以通过一种语法类似于JavaScript的程序语言Solidity来开发智能合约，并编译成EVM代码，部署到以太坊上\cite{dannen2017introducing}。一旦智能合约部署成功，就相当于定义了该合约账户$a$收到一个交易后的状态转移函数$\delta_{a}$。
 EVM目前在此类平台中被广泛使用，但它也存在一些问题。例如，缺少库函数支持，安全性问题突出等。
 
 以太坊的账本结构是区块链\cite{nakamoto2008bitcoin}，区块链由区块构成，每一个区块中包含一组交易的列表，后一个区块引用前一个区块的hash，构成一个链状结构。
@@ -162,7 +162,7 @@ EVM目前在此类平台中被广泛使用，但它也存在一些问题。例�
 \end{equation}
 这个结构的最大好处是有效的防止交易被篡改，但由于它维护的是所有交易的全序，任何两个交易交换顺序，都会生成一个新账本，也造成这种结构具有较高的分叉概率。事实上，在这个定义下，交易状态机的状态空间被看作一棵树：初始状态是根节点，不同的交易顺序代表不同的路径，叶子节点是最终状态。现实的情况下，大量叶子节点的状态是相同的，这就造成了大量的伪分叉。
 
-以太坊的共识算法$\Phi$称为PoW，该算法率先在比特币协议中提出\cite{nakamoto2008bitcoin}。PoW算法依赖于某个易于验证但难于求解的数学问题，例如，根据一个hash函数$h:N \rightarrow N$，求解$x$，使$h(T+x) \geq d$，$d$是一个给定的数，称为难度，T是区块中包含的交易列表的二进制表示。在区块链的每个区块中，都会包含这类问题的一个解。将全部区块的难度加起来，就是一个区块链账本的总难度：
+以太坊的共识算法$\Phi$称为PoW，该算法率先在比特币协议中提出\cite{nakamoto2008bitcoin}。PoW算法依赖于某个易于验证但难于求解的数学问题，例如，根据一个hash函数$h:N \rightarrow N$，求解$x$，使$h(T+x) \leq d$，$d$是一个给定的数，称为难度，T是区块中包含的交易列表的二进制表示。在区块链的每个区块中，都会包含这类问题的一个解。将全部区块的难度加起来，就是一个区块链账本的总难度：
 \begin{equation}
 D(l) = D(\sum_{i} l_{i}) = \sum_{i} D(l_{i})
 \end{equation}
@@ -180,10 +180,10 @@ PoW共识算法具有较好的安全性，迄今为止在比特币和以太坊�
 \subsection{改进方向}
 在以太坊诞生之后，以太社区和其他一些同类项目开始从不同方向对系统加以改进。从系统的抽象模型来看，可以改进的方向主要包括以下几个：
 \begin{itemize}
-	\item 改进系统状态$\boldsymbol{S}$	
-	\item 改进状态迁移函数$\boldsymbol{\delta}$	
-	\item 改进账本结构$\boldsymbol{\Gamma}$
-	\item 改进共识算法$\boldsymbol{\Phi}$
+    \item 改进系统状态$\boldsymbol{S}$    
+    \item 改进状态迁移函数$\boldsymbol{\delta}$ 
+    \item 改进账本结构$\boldsymbol{\Gamma}$
+    \item 改进共识算法$\boldsymbol{\Phi}$
 \end{itemize}
 
 \subsubsection{改进系统状态}
@@ -193,7 +193,7 @@ PoW共识算法具有较好的安全性，迄今为止在比特币和以太坊�
 除此之外，跨合约交互也会成为此类系统的瓶颈。例如，Cosmos中，不同的Zone交互，需要通过一个共同的链Hub来完成\cite{cosmos}。
 
 \subsubsection{改进状态迁移函数}
-一些项目立足于改进EVM，提供更为丰富的智能合约编程语言。例如，RChain	定义了一种基于$\pi$演算的智能合约语言Rholang；NEO中的智能合约称为NeoContract，可以用Java，C\# 等主流编程语言开发；EOS使用C/C++来编程。
+一些项目立足于改进EVM，提供更为丰富的智能合约编程语言。例如，RChain  定义了一种基于$\pi$演算的智能合约语言Rholang；NEO中的智能合约称为NeoContract，可以用Java，C\# 等主流编程语言开发；EOS使用C/C++来编程。
 
 \subsubsection{改进账本结构}
 账本结构的改进方向是构造等价类，将多个交易全局有序的线性账本规约为一个只记录部分偏序关系的非线性账本，这种非线性账本结构是一个DAG(有向无环图)。目前，Byteball\cite{byteball}，IOTA\cite{iota}，Nano\cite{nano}等项目基于DAG的账本结构实现了加密货币功能。也有一些项目在尝试利用DAG实现智能合约，但迄今为止在这个方向上的改进还在探索中。
@@ -213,13 +213,13 @@ P_{ff} = \sum_{i=1}^{N}\left ( \frac{M_{i}}{M} \right )^{C} - \frac{1}{M^{C-1}}
 
 从这个公式可以看出，为了降低伪分叉概率，可以有两种途径：
 \begin{itemize}
-	\item 在账本集合$L$上建立等价关系，对其划分等价类，构造分叉更少的账本
-	\item 限制有权生产账本的用户，从而减少$C$
+    \item 在账本集合$L$上建立等价关系，对其划分等价类，构造分叉更少的账本
+    \item 限制有权生产账本的用户，从而减少$C$
 \end{itemize}
 
 第一种途径是Vite设计的重要方向，后文将详细论述；第二种途径现在已被多种算法所采用。在PoW算法中，任何用户都有权生产区块；而PoS算法将生产区块的权力限制在那些拥有系统权益的用户中；DPoS算法将有权生产区块的用户进一步限制在一组代理节点范围内。
-	
-目前，通过改良共识算法，已经产生出一些比较有影响力的项目。例如，Cardano采用了一种PoS算法，称为Ouroboros，文献\cite{bernardo2017ouroboros}对该算法相关性质给出了严格证明；EOS采用了DPoS算法，通过快速生产区块，提高系统的吞吐；Qtum\cite{dai2017smart}的共识算法也是一种PoS算法;RChain采用的Casper算法也是一种PoS算法。
+    
+目前，通过改良共识算法，已经产生出一些比较有影响力的项目。例如，Cardano采用了一种PoS算法，称为Ouroboros，文献\cite{bernardo2017ouroboros}对该算法相关性质给出了严格证明；EOS采用了BFT-DPoS算法，通过快速生产区块，提高系统的吞吐；Qtum\cite{dai2017smart}的共识算法也是一种PoS算法;RChain采用的Casper算法也是一种PoS算法。
 
 还有一些其他项目在共识算法的改进上提出了自己的方案。NEO采用了一种BFT算法，称为dBFT；Cosmos采用了一种称为Tendermint\cite{tendermint}的算法。
 
@@ -227,22 +227,26 @@ P_{ff} = \sum_{i=1}^{N}\left ( \frac{M_{i}}{M} \right )^{C} - \frac{1}{M^{C-1}}
 \subsection{概述}
 账本的作用主要是为了确定交易之间的顺序，交易的顺序会影响以下两个方面：
 \begin{itemize}
-	\item \textbf{状态一致性：} 由于系统的状态不是一个CRDT(Conflict-free replicated data types)\cite{crdt}，因此，交易不都是可交换的，不同的交易执行顺序可能会导致系统进入不同的状态。
-	\item \textbf{hash有效性：} 账本中，交易会被打包成区块，区块中包含互相引用的hash。交易的先后顺序会影响账本中hash引用的连通性。这种影响的范围越大，篡改交易的成本就越大。这是因为，改变任何一个交易，都必须重建所有直接或间接引用该交易的区块的hash。
+    \item \textbf{状态一致性：} 由于系统的状态不是一个CRDT(Conflict-Free Replicated Data Types)\cite{crdt}，因此，交易不都是可交换的，不同的交易执行顺序可能会导致系统进入不同的状态。
+    \item \textbf{hash有效性：} 账本中，交易会被打包成区块，区块中包含互相引用的hash。交易的先后顺序会影响账本中hash引用的连通性。这种影响的范围越大，篡改交易的成本就越大。这是因为，改变任何一个交易，都必须重建所有直接或间接引用该交易的区块的hash。
 \end{itemize}
 
 而账本的设计也有两个主要目标：
 
 \includegraphics[width=.9\linewidth]{image/ledger-merge.png}
 
-\begin{itemize}
-	\item \textbf{降低伪分叉率：} 如前文讨论，降低伪分叉率可以通过建立等价类，尽量将导致系统进入同一状态的一组账本合并成一个账本来实现。如上图，根据伪分叉率公式可以算得，左图的账本伪分叉率$P_{ff}=\left (  \frac{3}{5} \right )^{C} + \left (  \frac{2}{5} \right )^{C} - \frac{1}{5^{C-1}}$；而合并账本空间后，右图的伪分叉率为${P_{ff}}'=\left (  \frac{2}{3} \right )^{C} + \left (  \frac{1}{3} \right )^{C} - \frac{1}{3^{C-1}}$。可知当$C > 1$，${P_{ff}}' < P_{ff}$。也就是说，我们应尽量减小账本中交易之间的偏序关系，允许更多的交易之间的顺序可交换。
-	\item \textbf{防篡改：} 当账本$l$中一个交易$t$被修改，账本的两个子账本$l = l_{1} + l_{2}$中，子账本$l_{1}$不受影响，而子账本$l_{2}$中的hash引用需要重建，以构成一个新的有效账本${l}' = l_{1} + {l_{2}}'$。受影响的子账本$l_{2} = \Gamma(T_{2}),T_{2} = \lbrace x \vert x \in T, x > t \rbrace $。由此可见，想提高篡改交易的成本，需要在账本中尽量多的维护交易之间的偏序关系，以扩大篡改的影响范围$\vert T_{2} \vert$。
-\end{itemize}
+[TODO]: 这个图和上下文不关联
+
+\begin{enumerate}
+    \item \textbf{降低伪分叉率：} 如前文讨论，降低伪分叉率可以通过建立等价类，尽量将导致系统进入同一状态的一组账本合并成一个账本来实现。如上图，根据伪分叉率公式可以算得，左图的账本伪分叉率$P_{ff}=\left (  \frac{3}{5} \right )^{C} + \left (  \frac{2}{5} \right )^{C} - \frac{1}{5^{C-1}}$；而合并账本空间后，右图的伪分叉率为${P_{ff}}'=\left (  \frac{2}{3} \right )^{C} + \left (  \frac{1}{3} \right )^{C} - \frac{1}{3^{C-1}}$。可知当$C > 1$，${P_{ff}}' < P_{ff}$。也就是说，我们应尽量减小账本中交易之间的偏序关系，允许更多的交易之间的顺序可交换。
+    \item \textbf{防篡改：} 当账本$l$中一个交易$t$被修改，账本的两个子账本$l = l_{1} + l_{2}$中，子账本$l_{1}$不受影响，而子账本$l_{2}$中的hash引用需要重建，以构成一个新的有效账本${l}' = l_{1} + {l_{2}}'$。受影响的子账本$l_{2} = \Gamma(T_{2}),T_{2} = \lbrace x \vert x \in T, x > t \rbrace $。由此可见，想提高篡改交易的成本，需要在账本中尽量多的维护交易之间的偏序关系，以扩大篡改的影响范围$\vert T_{2} \vert$。
+\end{enumerate}
+
+
+
+显然，以上两个目标是互相矛盾的，在设计账本结构时必须作出必要的权衡取舍。由于账本维护的是交易之间的偏序，因此它本质上是一个偏序集(Poset)\cite{poset}，如果用哈斯图(Hasse Diagram)\cite{hasse}来表示，在拓扑上就是一个DAG。
 
 \includegraphics[width=\linewidth]{image/ledger-compare.png}
-
-显然，以上两个目标是互相矛盾的，在设计账本结构时必须作出必要的权衡取舍。由于账本维护的是交易之间的偏序，因此它本质上是一个偏序集(poset)\cite{poset}，如果用哈斯图(Hasse diagram)\cite{hasse}来表示，在拓扑上就是一个DAG。
 
 上图对比了几种常见的账本结构，靠近左侧的账本维护更少的偏序关系，哈斯图显得比较扁平，具有更低的伪分叉率；靠近右侧的账本维护更多的偏序关系，哈斯图比较细长，具有更高的防篡改特性。
 
@@ -306,9 +310,9 @@ P_{ff} = \sum_{i=1}^{N}\left ( \frac{M_{i}}{M} \right )^{C} - \frac{1}{M^{C-1}}
 
 由于建立在交易集合$T$上的偏序关系$<$满足：
 \begin{itemize}
-	\item 非自反性(irreflexive)：$\forall t \in T$，不存在$t < t$；
-	\item 传递性(transitive)：$\forall t_{1},t_{2},t_{3} \in T$，若$t_{1}<t_{2},t_{2}<t_{3}$，则有$t_{1}<t_{3}$；
-	\item 非对称性(asymmetric)：$\forall t_{1},t_{2} \in T$，若$t_{1}<t_{2}$，则不存在$t_{2}<t_{1}$
+    \item 非自反性(irreflexive)：$\forall t \in T$，不存在$t < t$；
+    \item 传递性(transitive)：$\forall t_{1},t_{2},t_{3} \in T$，若$t_{1}<t_{2},t_{2}<t_{3}$，则有$t_{1}<t_{3}$；
+    \item 非对称性(asymmetric)：$\forall t_{1},t_{2} \in T$，若$t_{1}<t_{2}$，则不存在$t_{2}<t_{1}$
 \end{itemize}
 
 这样，我们就可以用严格偏序集的方式来定义Vite的账本：
@@ -500,7 +504,7 @@ $$
 Vite的特点总结如下:
 
 \begin{itemize}
-	\item 特点一。
+    \item 特点一。
 \end{itemize}
 
 \section{致谢}
