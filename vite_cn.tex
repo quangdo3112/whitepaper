@@ -45,6 +45,7 @@
 \usepackage[toc, page, title, titletoc, header]{appendix}
 \usepackage{marginnote}
 \usepackage{tablefootnote}
+\usepackage{tabu}
 
 \renewcommand\abstractname{Abstract}
 
@@ -570,7 +571,9 @@ Vite协议建立了更完善的异步模型：首先，将交易拆分成基于�
 这是一个典型的生产者-消费者模型，在交易的生命周期中，无论上游的生产速率如何变动，下游都可以以恒定的速率消化待处理的交易，从而充分利用平台资源，提高了系统的吞吐。
 
 \section{虚拟机}
-当前以太坊生态相对较为成熟，已经有大量基于EVM的智能合约运行在其上。为方便既有的存量应用无缝迁移到新平台，Vite的智能合约虚拟机将提供EVM兼容性。由于Vite的账本结构和以太坊不同，一些EVM指令的语义需要重新定义。此外，我们将针对EVM和Solidity的一些不足做一些改进，从而提高Vite对智能合约的支持能力。
+当前以太坊生态相对较为成熟，已经有大量基于EVM的智能合约运行在其上。为方便既有的存量应用无缝迁移到新平台，Vite的智能合约虚拟机将提供EVM兼容性。由于Vite的账本结构和以太坊不同，一些EVM指令的语义需要重新定义。具体的语义兼容性差异可以参考附录\ref{app:evm-instruction-set}。
+
+此外，我们将针对EVM和Solidity的一些不足做一些改进，从而提高Vite对智能合约的支持能力。
 
 \subsection{标准库}
 在以太坊上开发智能合约的开发者，经常被Solidity缺乏标准库的问题所困扰。例如，路印协议中的环路验证必须在链外执行，其中一个重要原因就是Solidity没有提供浮点运算功能，尤其是求浮点数的n次方根\cite{loopring}。
@@ -590,7 +593,12 @@ Vite协议建立了更完善的异步模型：首先，将交易拆分成基于�
 
 为了保证Vite交易定义中的单自由度原则不被打破，每执行一次事件回调，都需要向账本中显式加入一个交易对。请注意，这类交易不是由用户发起的，而是由Vite系统自动产生。为了确保回调交易能够在事件发生时可靠生成，观察者模式只适用于快照共识组和公共共识组，不支持私有共识组和用户定制的委托共识组。
 
+另外，为保证Vite运行时环境简单高效，被观察对象的订阅逻辑不写在合约代码中。用户在部署合约时准备好回调方法，在合约部署成功后，再通过一个特殊的交易来注册观察者。用户也可以通过发送一个交易，取消观察者的注册，在取消交易所在的位置之后，系统将不再向账本中写入该账户的事件回调请求交易。
+
 \subsection{燃料}
+燃料(Gas)在以太坊中主要有两个作用，一是量化EVM代码执行所消耗的计算资源和存储资源，二是确保EVM代码停机。根据可计算性理论，图灵机上的停机问题(Halting Problem)是一个不可计算问题\cite{haltingproblems}。也就是说，无法通过分析EVM代码来判断一个智能合约能否在有限次执行后停止。
+
+因此，Vite中也保留了EVM中的Gas计算。不过在Vite中，没有gas price这个概念，用户不是通过支付手续费的方式来购买一次交易所需的燃料，而是通过一种基于配额的模型，来获取计算资源。配额的计算将在后文“经济模型”章节详细讨论。
 
 \subsection{同步语义和异步语义}
 
@@ -622,4 +630,291 @@ Vite的特点总结如下:
 \bibliography{vite}
 \bibliographystyle{unsrt}
 
+
+\begin{appendices}
+
+\section{EVM指令集\label{app:evm-instruction-set}}
+\subsubsection{0s: 停止和代数运算指令集}
+\begin{tabu}{r l l l l l} \savetabu{opcodes}
+\toprule
+
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+0x00 & {\small STOP} & 0 & 0 & 停止代码执行。 &  语义相同\\
+\midrule
+0x01 & {\small ADD} & 2 & 1 & 将两个操作数相加。 & 语义相同\\
+\midrule
+0x02 & {\small MUL} & 2 & 1 & 将两个操作数相乘。 & 语义相同\\
+\midrule
+0x03 & {\small SUB} & 2 & 1 & 将两个操作数相减。 & 语义相同\\
+\midrule
+0x04 & {\small DIV} & 2 & 1 & 将两个操作数整除，如除数为0，则返回0。 & 语义相同\\
+\midrule
+0x05 & {\small SDIV} & 2 & 1 & 带符号的整除。 & 语义相同\\
+\midrule
+0x06 & {\small MOD} & 2 & 1 & 求模操作。 & 语义相同\\
+\midrule
+0x07 & {\small SMOD} & 2 & 1 & 带符号的求模操作。 & 语义相同\\
+\midrule
+0x08 & {\small ADDMOD} & 3 & 1 & 先将前两个操作数相加，再与第三个操作数求模。 & 语义相同\\
+\midrule
+0x09 & {\small MULMOD} & 3 & 1 & 先将前两个操作数相乘，再与第三个操作数求模。 & 语义相同\\
+\midrule
+0x0a & {\small EXP} & 2 & 1 & 求两个操作数的乘方。 & 语义相同\\
+\midrule
+0x0b & {\small SIGNEXTEND} & 2 & 1 & 符号扩展。 & 语义相同\\
+\midrule
+\end{tabu}
+
+\subsubsection{10s: 比较和位运算指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+
+0x10 & {\small LT} & 2 & 1 & 小于比较。 &  语义相同\\
+\midrule
+0x11 & {\small GT} & 2 & 1 & 大于比较。 &  语义相同\\
+\midrule
+0x12 & {\small SLT} & 2 & 1 & 带符号的小于比较。 &  语义相同\\
+\midrule
+0x13 & {\small SGT} & 2 & 1 & 带符号的大于比较。 &  语义相同\\
+\midrule
+0x14 & {\small EQ} & 2 & 1 & 比较是否相等。 &  语义相同\\
+\midrule
+0x15 & {\small ISZERO} & 1 & 1 & 判断是否为0。 &  语义相同\\
+\midrule
+0x16 & {\small AND} & 2 & 1 & 按位与操作。 &  语义相同\\
+\midrule
+0x17 & {\small OR} & 2 & 1 & 按位或操作。 &  语义相同\\
+\midrule
+0x18 & {\small XOR} & 2 & 1 & 按位异或操作。 &  语义相同\\
+\midrule
+0x19 & {\small NOT} & 1 & 1 & 按位非操作。 &  语义相同\\
+\midrule
+0x1a & {\small BYTE} & 2 & 1 & 取第二个操作数中的某一个字节。 &  语义相同\\
+
+\bottomrule
+\end{tabu}
+
+\subsubsection{20s: SHA3指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义} \vspace{5pt} \\
+0x20 & {\small SHA3} & 2 & 1 & 计算Keccak-256哈希。 &  语义相同\\
+
+\bottomrule
+\end{tabu}
+
+\subsubsection{30s: 环境信息指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+
+0x30 & {\small ADDRESS} & 0 & 1 & 获取当前账户地址。 &  语义相同\\
+\midrule
+0x31 & {\small BALANCE} & 1 & 1 & 获取一个账户的余额。 &  语义相同。\\
+&&&&& 返回的是账户的VT余额。\\
+\midrule
+0x32 & {\small ORIGIN} & 0 & 1 & 获取原始交易发送者地址。 & 语义相同。\\
+&&&&& 如果在事件回调中使用，则返回Observable的地址。\\
+\midrule
+0x33 & {\small CALLER} & 0 & 1 & 获取直接调用者地址。 & 语义相同。\\
+&&&&& 事件回调中也可以使用。 \\
+\midrule
+0x34 & {\small CALLVALUE} & 0 & 1 & 获取调用交易中的转账金额。 & 语义相同\\
+\midrule
+0x35 & {\small CALLDATALOAD} & 1 & 1 & 获取本次调用的参数数据。 & 语义相同\\
+\midrule
+0x36 & {\small CALLDATASIZE} & 0 & 1 & 获取本次调用的参数数据大小。 & 语义相同\\
+\midrule
+0x37 & {\small CALLDATACOPY} & 3 & 0 & 将调用参数数据拷贝到内存。 & 语义相同 \\
+\midrule
+0x38 & {\small CODESIZE} & 0 & 1 & 获取在当前环境中运行的代码的大小。 & 语义相同\\
+\midrule
+0x39 & {\small CODECOPY} & 3 & 0 & 将当前环境中运行的代码拷贝到内存。 & 语义相同\\
+\midrule
+0x3a & {\small GASPRICE} & 0 & 1 & 获取当前环境的燃料价格。 & 语义不同。\\
+&&&&& 永远返回0。\\
+\midrule
+0x3b & {\small EXTCODESIZE} & 1 & 1 & 获取一个账户的代码大小。 & 语义相同 \\
+\midrule
+0x3c & {\small EXTCODECOPY} & 4 & 0 & 将指定账户的代码拷贝到内存。 & 语义相同\\
+\midrule
+0x3d & {\small RETURNDATASIZE} & 0 & 1 & 获取前一次调用返回的数据大小。 & 语义相同\\
+\midrule
+0x3e & {\small RETURNDATACOPY} & 3 & 0 & 将前一次调用返回的数据拷贝到内存。 &  语义相同\\
+\bottomrule
+\end{tabu}
+
+\subsubsection{40s: 区块信息指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+
+0x40 & {\small BLOCKHASH} & 1 & 1 & 获取一个区块的哈希。 & 语义不同。\\
+&&&&& 返回相应的快照块的哈希。 \\
+\midrule
+0x41 & {\small COINBASE} & 0 & 1 & 获取所在区块挖坑受益人地址。 & 语义不同。\\
+&&&&& 永远返回0。 \\
+\midrule
+0x42 & {\small TIMESTAMP} & 0 & 1 & 返回所在区块的时间戳。 & 语义不同。\\
+&&&&& 永远返回0。 \\
+\midrule
+0x43 & {\small NUMBER} & 0 & 1 & 返回所在区块编号。 & 语义不同。\\
+&&&&& 返回响应交易块在该账户链上的编号。 \\
+\midrule
+0x44 & {\small DIFFICULTY} & 0 & 1 & 返回所在区块的难度。 & 语义不同。\\
+&&&&& 永远返回0。 \\
+\midrule
+0x45 & {\small GASLIMIT} & 0 & 1 & 返回所在区块的燃料限额。 & 语义不同。\\
+&&&&& 永远返回0。 \\
+\bottomrule
+\end{tabu}
+
+\subsubsection{50s: 栈、内存、存储、控制流操作指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+
+0x50 & {\small POP} & 1 & 0 & 从栈顶弹出一条数据。 & 语义相同\\
+\midrule
+0x51 & {\small MLOAD} & 1 & 1 & 从内存加载一个word。 & 语义相同\\
+
+\midrule
+0x52 & {\small MSTORE} & 2 & 0 & 保存一个word到内存 & 语义相同\\
+
+\midrule
+0x53 & {\small MSTORE8} & 2 & 0 & 保存一个字节到内存。 & 语义相同\\
+
+\midrule
+0x54 & {\small SLOAD} & 1 & 1 & 从存储中加载一个word。 & 语义相同\\
+
+\midrule
+0x55 & {\small SSTORE} & 2 & 0 & 保存一个word到存储。 & 语义相同\\
+\midrule
+0x56 & {\small JUMP} & 1 & 0 & 跳转指令。 & 语义相同\\
+\midrule
+0x57 & {\small JUMPI} & 2 & 0 & 条件跳转指令。 & 语义相同\\
+\midrule
+0x58 & {\small PC} & 0 & 1 & 获取程序计数器的值。 & 语义相同\\
+\midrule
+0x59 & {\small MSIZE} & 0 & 1 & 获取内存大小。 & 语义相同\\
+\midrule
+0x5a & {\small GAS} & 0 & 1 & 获取可用燃料数。 & 语义不同。\\
+&&&&& 永远返回0。 \\
+\midrule
+0x5b & {\small JUMPDEST} & 0 & 0 & 标注一个跳转目的地。 & 语义相同\\
+\bottomrule
+\end{tabu}
+
+\subsubsection{60s 和 70s: 压栈操作指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+
+0x60 & {\small PUSH1} & 0 & 1 & 将1字节对象压入栈顶。 & 语义相同\\
+
+\midrule
+0x61 & {\small PUSH2} & 0 & 1 & 将2字节对象压入栈顶。 & 语义相同 \\
+
+\midrule
+\multicolumn{1}{c}{\vdots} & \multicolumn{1}{c}{\vdots} & \vdots & \vdots & \multicolumn{1}{c}{\vdots} \\
+\midrule
+0x7f & {\small PUSH32} & 0 & 1 & 将32字节对象(整个字)压入栈顶。 & 语义相同 \\
+
+\bottomrule
+\end{tabu}
+
+\subsubsection{80s: 复制操作指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+
+0x80 & {\small DUP1} & 1 & 2 & 复制栈中第1个对象，并压入栈顶。 & 语义相同 \\
+
+\midrule
+0x81 & {\small DUP2} & 2 & 3 & 复制栈中第2个对象，并压入栈顶。 & 语义相同 \\
+
+\midrule
+\multicolumn{1}{c}{\vdots} & \multicolumn{1}{c}{\vdots} & \vdots & \vdots & \multicolumn{1}{c}{\vdots} \\
+\midrule
+0x8f & {\small DUP16} & 16 & 17 & 复制栈中第16个对象，并压入栈顶。 & 语义相同 \\
+
+\bottomrule
+\end{tabu}
+
+\subsubsection{90s: 交换操作指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+
+0x90 & {\small SWAP1} & 2 & 2 & 交换栈中第1个和第2个对象。 & 语义相同 \\
+
+\midrule
+0x91 & {\small SWAP2} & 3 & 3 & 交换栈中第1个和第3个对象。 & 语义相同 \\
+
+\midrule
+\multicolumn{1}{c}{\vdots} & \multicolumn{1}{c}{\vdots} & \vdots & \vdots & \multicolumn{1}{c}{\vdots} \\
+\midrule
+0x9f & {\small SWAP16} & 17 & 17 & 交换栈中第1个和第17个对象。 & 语义相同 \\
+
+\bottomrule
+\end{tabu}
+
+\subsubsection{a0s: 日志操作指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+
+0xa0 & {\small LOG0} & 2 & 0 & 扩展日志记录，不设主题。 & 语义相同\\
+
+\midrule
+0xa1 & {\small LOG1} & 3 & 0 & 扩展日志记录，1个主题。 & 语义相同 \\
+
+\midrule
+\multicolumn{1}{c}{\vdots} & \multicolumn{1}{c}{\vdots} & \vdots & \vdots & \multicolumn{1}{c}{\vdots} \\
+\midrule
+0xa4 & {\small LOG4} & 6 & 0 & 扩展日志记录，4个主题。 & 语义相同\\
+
+\bottomrule
+\end{tabu}
+
+\subsubsection{f0s: 系统操作指令集}
+\begin{tabu}{\usetabu{opcodes}}
+\toprule
+\textbf{指令代码} & \textbf{助记词} & \textbf{出栈数} & \textbf{入栈数} & \textbf{原始EVM语义} & \textbf{Vite EVM语义}  \vspace{5pt} \\
+
+0xf0 & {\small CREATE} & 3 & 1 & 创建一个新合约。 & 语义相同 \\
+
+\midrule
+0xf1 & {\small CALL} & 7 & 1 & 调用另一个合约。 & 语义相同 \\
+
+\midrule
+0xf2 & {\small CALLCODE} & 7 & 1 & 调用另一个合约的代码， & 语义相同 \\
+&&&& 改变本账户状态。 \\
+
+\midrule
+0xf3 & {\small RETURN} & 2 & 0 & 停止执行并返回数据。 & 语义相同 \\
+
+\midrule
+0xf4 & {\small DELEGATECALL} & 6 & 1 & 调用另一个合约的代码，改变本账户 & 语义相同 \\
+&&&& 状态，保留原始交易信息。\\
+
+\midrule
+0xfa & {\small STATICCALL} & 6 & 1 & 调用另一个合约，不允许改变状态。 & 语义相同 \\
+
+\midrule
+0xfd & {\small REVERT} & 2 & 0 & 停止执行，恢复状态，并返回数据。 & 语义相同 \\
+&&&&& 没有返回剩余燃料的语义。\\
+
+\midrule
+0xfe & {\small INVALID} & $\varnothing$ & $\varnothing$ & 无效指令。 & 语义相同 \\
+\midrule
+
+0xff & {\small SELFDESTRUCT} & 1 & 0 & 停止执行，将合约设置为待删除， & 语义相同 \\
+&&&& 返回所有余额。 \\
+\bottomrule
+\end{tabu}
+
+
+\end{appendices}
 \end{document}
