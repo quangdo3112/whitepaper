@@ -64,13 +64,13 @@
 
 \title{\textbf{Vite: A High Performance Asynchronous Decentralized Application Platform}}
 \author{
-  Liu Chunming\\
+  Chunming Liu\\
   \texttt{charles@vite.org}\\
   \and
-  Wang Dong\\
+  Daniel Wang\\
   \texttt{daniel@loopring.org}\\
   \and
-  Wu Ming\\
+  Ming Wu\\
   \texttt{woo@vite.org}\\
  }
 \date{}
@@ -93,7 +93,7 @@
 \maketitle
 
 \begin{abstract}
-Vite is a universal, decentralized application platform that meets the requirements of industrial applications for high throughput, low latency and scalability while taking into account security. Vite uses DAG ledger structure, and transactions in ledgers are grouped by accounts. The snapshot chain structure in Vite can make up for the lack of tamper proof ability of ledgers. Through the HDPoS(Hierarchical Delegated Proof of Stake), the writing and confirming of the transaction are to be decoupled, and the high performance and scalability of the system are guaranteed. The virtual machine part of Vite is compatible with EVM, and the smart contract language has been extended appropriately on the basis of Solidity, providing more powerful ability of description. In addition, an important improvement in Vite design is the adoption of a asynchronous architecture driven by message, which transmits information through messages between smart contracts, which greatly improves system throughput and scalability. In addition to built-in native tokens, Vite also supports users to issue their own digital assets, and also provides cross chain value transmission and asset exchange based on the Loopring protocol \cite{loopring}. Vite realizes resource allocation by quotas, and low frequency users do not have to pay transaction fees. Vite also supports timing scheduling, naming service, contract upgrade, block clipping and other functions.
+Vite is a generalised decentralized application platform that meets the requirements of industrial applications for high throughput, low latency and scalability while taking into account security. Vite uses DAG ledger structure, and transactions in ledgers are grouped by accounts. The Snapshot Chain structure in Vite can make up for the lack of security of the DAG ledger. The HDPoS consensus algorithm, through which writing and confirming of transactions are asynchronous, provides high performance and scalability. The Vite VM is compatible with EVM, and the smart contract language extended from Solidity, providing more powerful ability of description. In addition, an important improvement in Vite design is the adoption of a asynchronous Event Driven  Architecture, which transmits information through messages between smart contracts, which greatly improves system throughput and scalability. In addition to built-in native tokens, Vite also supports users to issue their own digital assets, and also provides cross chain value transfer and  exchange based on Loopring Protocol \cite{loopring}. Vite realizes resource allocation by quotas, and light  users do not have to pay transaction fees. Vite also supports contract scheduling, name service, contract update, block pruning and other features.
 
 \end{abstract}
 
@@ -795,13 +795,13 @@ Mint: {
 Once the request is accepted by the network, the \textit{vite} included in the mint transaction will be deducted from the initiator account as the mint transaction fee. The system records the information of the new token and assigns a \textit{token\_id} to it. All the balances of the newly generated tokens will be added to the \textit{owner} address, that is to say, the owner account is the genesis account of the token.
 
 \subsection{Cross Chain Protocol}
-In order to support cross chain value transmission of digital assets and eliminate "value island", Vite designed a Vite Cross-chainTransfer Protocol (VCTP).
+In order to support cross chain value transfer of digital assets and eliminate "value island", Vite designed a Vite Cross-chain Transfer Protocol (VCTP).
 
 For every asset that needs cross-chain transmission on the target chain, a token that corresponds to it is needed in the Vite as the voucher of the target Token circulating within the Vite, which is called the ToT (Token of Token). For example, if you want to transfer the \textit{ether} in the Ethereum account to Vite, you can issue a ToT with an identifier of \textit{ETH} in Vite, the initial quantity of TOT should be equal to the total quantity of \textit{ether}.
 
-For each target chain, there is a gateway contract on Vite to maintain the mapping relationship between Vite transactions and target chain transactions. In the consensus group where the contract is located, the node responsible for generating blocks is called cross chain Relay (VCTPRelay). Cross Chain Relay needs to be the Vite node and the whole node of the target chain at the same time, and monitor transactions on both sides. On the target chain, we also need to deploy a gateway contract representing Vite.
+For each target chain, there is a Gateway Contract on Vite to maintain the mapping relationship between Vite transactions and target chain transactions. In the consensus group where the contract is located, the node responsible for generating blocks is called VCTP Relay. VCTP Relay needs to be the Vite node and the full node of the target chain at the same time, and listen transactions on both sides. On the target chain, we also need to deploy a Vite Gateway Contract.
 
-Before cross chain relay starts to work, the corresponding ToT in Vite should be transferred to the gateway contract. After that, the supply of ToT can only be controlled by the gateway contract, and no one can be added to ensure the 1: 1 exchange ratio between the ToT and the target asset. At the same time, the assets on the target chain are controlled by the Vite gateway contract, and no user can use it, so as to ensure that ToT has a full acceptance reserve.
+Before VCTP Relay starts to work, the corresponding ToT in Vite should be transferred to the gateway contract. After that, the supply of ToT can only be controlled by the gateway contract, and no one can be added to ensure the 1: 1 exchange ratio between the ToT and the target asset. At the same time, the assets on the target chain are controlled by the Vite gateway contract, and no user can use it, so as to ensure that ToT has a full acceptance reserve.
 
 \begin{center}
 \begin{figurehere}
