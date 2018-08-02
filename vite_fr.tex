@@ -736,11 +736,11 @@ Par conséquent, le calcul du gaz dans EVM est également conservé dans Vite. C
 \subsection{Native Token}
 Afin de quantifier les ressources de calcul et de stockage de la plate-forme et d'encourager les nœuds à s'exécuter, Vite a construit un "Native Token" ViteToken. L'unité de base du token est \textit{vite}, la plus petite unité est \textit{attov},,$1 \: vite = 10^{18} \: attov$.
 
-La chaîne d'instantanés est la clé de la sécurité et des performances de la plate-forme Vite. Afin d'inciter un nœud à participer à la vérification de la transaction, le protocole Vite établit la prime de FORGING pour la production du bloc d'instantané. Incitations de FORGING augmentera la liquidité de ViteToken et diluera les avantages des détenteurs de \textit{vite}. Par conséquent, nous limiterons l'inflation à 3\% par an.
+La chaîne d'instantanés est la clé de la sécurité et des performances de la plate-forme Vite. Afin d'inciter un nœud à participer à la vérification de la transaction, le protocole Vite établit la prime de FORGING pour la production du bloc d'instantané.
 
-Au contraire, lorsque les utilisateurs émettent de nouveaux tokens, déploient des contrats, enregistrent des noms de domaine VNS \footnote{se référer au service de nommage \textit{\ref{sec:vns}}} et obtiennent des quotas de ressources, ils ont besoin de consommer ou mettre en gage ViteToken pour réduire la liquidité.
+Au contraire, lorsque les utilisateurs émettent de nouveaux tokens, déploient des contrats, enregistrent des noms de domaine VNS \footnote{se référer au service de nommage \textit{\ref{sec:vns}}} et obtiennent des quotas de ressources, ils ont besoin de consommer ou mettre en gage ViteToken.
 
-Sous l'action combinée de ces deux facteurs, la liquidité de \textit{vite} peut être maintenue à un niveau florissant, et en même temps, elle est utile à l'optimisation de l'allocation des ressources du système.
+Sous l'action combinée de ces deux facteurs, elle est utile à l'optimisation de l'allocation des ressources du système.
 
 \subsection{Allocation de Ressource}
 Étant donné que Vite est une plate-forme dApp commune, les capacités des contrats intelligents qui y sont déployés varient, et chaque contrat intelligent différent a des exigences différentes en termes de capacité de chargement et déchargement et de délai. Même pour le même contrat intelligent, les exigences de performance à différentes étapes sont différentes.

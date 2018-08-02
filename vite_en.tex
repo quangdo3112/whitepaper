@@ -720,16 +720,16 @@ Therefore, the gas calculation in EVM is also retained in Vite. However, there i
 \subsection{Native Token}
 In order to quantify platform computing and storage resources and encourage nodes to run, Vite has built a native token ViteToken. The basic unit of token is \textit{vite}, the smallest unit is \textit{attov},,$1 \: vite = 10^{18} \: attov$.
 
-The snapshot chain is the key to the security and performance of the Vite platform. In order to incite node to participate in the transaction verification, the Vite protocol sets up the forging reward for the production of the snapshot block. Forging incentives will increase the liquidity of ViteToken and dilute the benefits of \textit{vite} holders. Therefore, we will limit inflation to 3\% per year.
+The snapshot chain is the key to the security and performance of the Vite platform. In order to incite node to participate in the transaction verification, the Vite protocol sets up the forging reward for the production of the snapshot block.
 
-On the contrary, when users issue new tokens, deploy contracts, register VNS domain names \footnote{refer to  \textit{\ref{sec:vns} naming service}} and obtain resource quotas, they need to consume or mortgage ViteToken to reduce the liquidity.
+On the contrary, when users issue new tokens, deploy contracts, register VNS domain names \footnote{refer to  \textit{\ref{sec:vns} naming service}} and obtain resource quotas, they need to consume or mortgage ViteToken.
 
-Under the combined action of these two factors, the liquidity of \textit{vite} can be maintained at a healthy level, and at the same time, it is conducive to optimizing the allocation of system resources.
+Under the combined action of these two factors, it is conducive to optimizing the allocation of system resources.
 
 \subsection{Resource Allocation}
 Since Vite is a common dApp platform, the capabilities of smart contracts deployed on them vary, and each different smart contract has different requirements for throughput and delay. Even for the same smart contract, performance requirements at different stages are different.
 
-In the design of the Ethereum , each transaction needs to be assigned a gas price when launching, so as to compete with other transactions to write accounts. This is a typical bidding model, which can effectively control the balance between supply and demand in principle. However, user is difficult to quantify the current supply and demand situation, and can not predict the price of other competitors, therefore market failure occurs easily. Moreover, the resources competing for each bid are directed against one transaction, and there is no agreement on the rational allocation of resources according to the account dimension.
+In the design of the Ethereum, each transaction needs to be assigned a gas price when launching, so as to compete with other transactions to write accounts. This is a typical bidding model, which can effectively control the balance between supply and demand in principle. However, user is difficult to quantify the current supply and demand situation, and can not predict the price of other competitors, therefore market failure occurs easily. Moreover, the resources competing for each bid are directed against one transaction, and there is no agreement on the rational allocation of resources according to the account dimension.
 
 \subsubsection{Quota Calculation}
 We have adopted a quota based resource allocation protocol in Vite, which allows users to obtain higher resource quotas in three ways:
